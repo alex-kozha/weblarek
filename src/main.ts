@@ -79,6 +79,12 @@ console.log('отправка данных /order/', re.posts('/order/',{
     ]
 } ))
 
+//финальная проверка сохранения каталога полученного из запроса
+const f = re.gets('/product/')
+const  res= new Products()
+f.then(data=> res.pushproducts(data.items)).then(f=> console.log(res.getproducts()))
+
+
 
 
 
