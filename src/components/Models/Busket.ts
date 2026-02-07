@@ -6,39 +6,36 @@ export class Busket{
     this.busket =[]
   }
 
-  getbusket(): IProduct[]{
+  getBusket(): IProduct[]{
     return this.busket
   }
 
-  prtobusket(pr: IProduct){
+  productToBusket(pr: IProduct){
     this.busket.push(pr)
   }
 
-  cleanbusket(){
+  cleanBusket(){
     this.busket = []
   }
 
-  checkproduct(id: string): boolean{
+  checkProduct(id: string): boolean{
      const res  = this.busket.find((el)=> el.id === id)
      return res ? true : false
   }
 
-  lenbusket(): number{
+  lengthBusket(): number{
     return this.busket.length
   }
 
-  fullpricebusket(): number {
+  fullPriceBusket(): number {
     const result = this.busket.reduce((acc, el): number=>{
-      if (el.price  && typeof(acc)==='number'){
-        acc+=el.price
-        return acc
-      }
+      acc+=(el.price || 0)
       return acc
     }, 0)
     return result
   }
 
-  dellpr(pr: IProduct){
+  deleteProduct(pr: IProduct){
     const ind  = this.busket.indexOf(pr)
     this.busket.splice(ind,1)
   }

@@ -2,37 +2,30 @@ import { IProduct } from '../../types/index.ts';
 
 export class Products{
   private products: IProduct[]
-  private viewcard: IProduct
+  private viewcard: IProduct | null
   constructor( ){
-    this.viewcard = {
-      id: '',
-      description: '',
-      image: '',
-      title: '',
-      category: '',
-      price: null
-    };
+    this.viewcard = null
     this.products = []
   }
 
-  getcard():IProduct {
+  getCard():IProduct | null{
     return this.viewcard
   }
 
-  getproducts(): IProduct[]{
+  getProducts(): IProduct[]{
     return this.products
   }
 
-  pushproducts(masproducts: IProduct[]){
+  pushProducts(masproducts: IProduct[]){
     this.products = masproducts
   }
 
-  getprid(id:string): IProduct | undefined{
+  getProductId(id:string): IProduct | undefined{
     const result  = this.products.find((el)=> el.id===id)
     return result
   }
 
-  savecard(card: IProduct){
+  saveCard(card: IProduct){
     this.viewcard = card
   }
 

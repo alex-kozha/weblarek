@@ -1,16 +1,17 @@
-import {Postreq,Getreq,IApi, ApiPostMethods} from '../../types/index.ts'
+import {ProductsPost,ProductsResponse,IApi, ProductsPostAnswer} from '../../types/index.ts'
 
 
 export class Request{
 
 
-  constructor(private ob: IApi){}
+  constructor(private api: IApi){}
 
-  gets(uri: string){
-   return this.ob.get<Getreq>(uri)
+  getProducts(){
+   return this.api.get<ProductsResponse>('/product/')
   }
 
-  posts(uri: string, data: Postreq, method: ApiPostMethods = 'POST') {
-    return this.ob.post<Postreq>(uri, data, method)
+  postOrder(data: ProductsPost){
+    return this.api.post<ProductsPostAnswer>('/order/', data, 'POST')
   }
 }
+

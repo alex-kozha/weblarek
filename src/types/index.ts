@@ -27,13 +27,17 @@ export interface Er extends IBuyer{
   pay: string
 }
 
-export interface Getreq{
+export interface ProductsResponse{
   total: string;
   items: IProduct[]
 }
 
-export interface Postreq extends IBuyer{
+export interface ProductsPost extends IBuyer{
   total: number;
   items: string[]
 }
 
+export interface ProductsPostAnswer{
+  id: string;
+  total: number;
+}

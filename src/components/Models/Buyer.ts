@@ -1,7 +1,7 @@
 import { IBuyer, TPayment, Er} from '../../types/index.ts';
 
 export class Buyer{
-protected buyer: IBuyer
+  private buyer: IBuyer
   constructor(){
     this.buyer = {
       payment: '',
@@ -11,7 +11,7 @@ protected buyer: IBuyer
     }
   }
 
-  clearinf(){
+  clearBuyerInformation(){
     this.buyer = {
       payment: '',
       email: '',
@@ -39,23 +39,23 @@ protected buyer: IBuyer
     return er
   }
 
-  getinf(): IBuyer{
+  buyerInformation(): IBuyer{
     return this.buyer
   }
 
-  pushad(ad: string){
+  pushAddress(ad: string){
     this.buyer.address = ad
   }
 
-  pushem(em: string){
+  pushEmail(em: string){
     this.buyer.email = em
   }
 
-  pushpho(pho: string){
+  pushPhone(pho: string){
     this.buyer.phone = pho
   }
 
-  pushpay(pay: TPayment){
+  pushPayment(pay: TPayment){
     this.buyer.payment = pay
   }
 }
