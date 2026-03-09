@@ -36,8 +36,7 @@ export class Busket{
   }
 
   deleteProduct(pr: IProduct){
-    const ind  = this.busket.indexOf(pr)
-    this.busket.splice(ind,1)
+      this.busket = this.busket.filter(item => item.id !== pr.id);
   }
 
 }

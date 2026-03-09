@@ -20,25 +20,23 @@ export class Buyer{
     }
   }
 
-  validation(): object{
-    let er: Partial   <Er> = {
+ validation(): Er {
+  const er: Er = {};
 
-    }
-    if(!this.buyer.address){
-      er.address =  'Заполните поле адреса'
-    }
-    if(!this.buyer.email){
-      er.email =  'Заполните поле емэйла'
-    }
-    if(!this.buyer.payment){
-      er.pay =  'Выберите вид оплаты'
-    }
-    if(!this.buyer.phone){
-      er.phone =  'Заполните поле телефона'
-    }
-    return er
+  if (!this.buyer.address) {
+    er.address = 'Заполните поле адреса';
   }
-
+  if (!this.buyer.email) {
+    er.email = 'Заполните поле емэйла';
+  }
+  if (!this.buyer.payment) {
+    er.pay = 'Выберите вид оплаты';
+  }
+  if (!this.buyer.phone) {
+    er.phone = 'Заполните поле телефона';
+  }
+  return er;
+}
   buyerInformation(): IBuyer{
     return this.buyer
   }

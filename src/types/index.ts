@@ -23,8 +23,11 @@ export interface IBuyer {
 
 export type TPayment = 'cash' | 'online' | ''
 
-export interface Er extends IBuyer{
-  pay: string
+export interface Er {
+  address?: string;
+  pay?: string;
+  email?: string;
+  phone?: string;
 }
 
 export interface ProductsResponse{
@@ -40,4 +43,8 @@ export interface ProductsPost extends IBuyer{
 export interface ProductsPostAnswer{
   id: string;
   total: number;
+}
+
+export interface ICardActions{
+  onClick(): void
 }
