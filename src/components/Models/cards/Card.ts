@@ -9,8 +9,6 @@ export interface ICardData {
 export abstract class Card extends Component<ICardData> {
   protected titleELement: HTMLElement;
   protected priceElement: HTMLElement;
-  title: string = '';
-  price: number | null = null;
 
   constructor(container: HTMLElement) {
     super(container);
@@ -18,10 +16,20 @@ export abstract class Card extends Component<ICardData> {
     this.priceElement = ensureElement<HTMLElement>('.card__price', container);
   }
 
+
+  set title(value: string) {
+    this.titleELement.textContent = value;
+  }
+
+
+  set price(value: number | null) {
+    this.priceElement.textContent = value === null ? 'Бесценно' : `${value} синапсов`;
+  }
+
   render(data: ICardData): HTMLElement {
     super.render(data);
-    this.titleELement.textContent = this.title;
-    this.priceElement.textContent = this.price === null ? 'Бесценно' : `${this.price} синапсов`;
+    this.title = data.title;
+    this.price = data.price;
     return this.container;
   }
 }

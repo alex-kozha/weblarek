@@ -14,7 +14,6 @@ export interface IPreviewData {
 export class PreviewCard extends ImgCard {
   protected descriptionElement: HTMLElement;
   protected buttonElement: HTMLButtonElement;
-  private currentProduct: IPreviewData | null = null;
 
   constructor(container: HTMLElement, protected events: IEvents) {
     super(container);
@@ -22,14 +21,8 @@ export class PreviewCard extends ImgCard {
     this.buttonElement = ensureElement<HTMLButtonElement>('.card__button', container);
 
     this.buttonElement.addEventListener('click', () => {
-      if (!this.currentProduct) return;
-
-      if (this.buttonElement.textContent === 'В корзину') {
-        this.events.emit('preview:add-to-basket', { product: this.currentProduct });
-      } else {
-        this.events.emit('preview:remove-from-basket', { product: this.currentProduct });
-      }
-    });
+  this.events.emit('preview:button-click');
+});
   }
 
   render(data: IPreviewData): HTMLElement {
@@ -38,20 +31,11 @@ export class PreviewCard extends ImgCard {
     return this.container;
   }
 
-  setButtonState(inBasket: boolean, available: boolean = true) {
-    if (!available) {
-      this.buttonElement.disabled = true;
-      this.buttonElement.textContent = 'Недоступно';
-    } else if (inBasket) {
-      this.buttonElement.disabled = false;
-      this.buttonElement.textContent = 'Удалить из корзины';
-    } else {
-      this.buttonElement.disabled = false;
-      this.buttonElement.textContent = 'В корзину';
-    }
-  }
+  set buttonText(value: string) {
+  this.buttonElement.textContent = value;
+}
 
-  setProduct(product: IPreviewData) {
-    this.currentProduct = product;
-  }
+set buttonDisabled(value: boolean) {
+  this.buttonElement.disabled = value;
+}
 }

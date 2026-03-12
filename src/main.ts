@@ -5,7 +5,7 @@ import { Products } from './components/Models/Products';
 import { Busket } from './components/Models/Busket';
 import { Buyer } from './components/Models/Buyer';
 import { Header } from './components/Models/Header';
-import { Gallery } from './components/Models/Gallery';
+import { Gallery } from './components/Models/cards/Gallery.ts';
 import { Modal } from './components/Models/modal/Modal';
 import { Success } from './components/Models/modal/SuccessModal';
 import { PreviewCard } from './components/Models/modal/PreviewCardModal';
@@ -17,7 +17,9 @@ import { BuskertCard } from './components/Models/cards/BasketCard';
 import { cloneTemplate } from './utils/utils';
 import { Api } from './components/base/Api';
 import {API_URL} from './utils/constants.ts'
+import { CDN_URL } from './utils/constants';
 import { TPayment } from './types/index.ts';
+import { IProduct } from './types/index.ts';
 
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
 const events = new EventEmitter();
@@ -44,12 +46,42 @@ const orderTemplate = document.getElementById('order') as HTMLTemplateElement;
 const contactsTemplate = document.getElementById('contacts') as HTMLTemplateElement;
 const successTemplate = document.getElementById('success') as HTMLTemplateElement;
 
-let currentOrderForm: OrderForm | null = null;
-let currentContactsForm: ContactsForm | null = null;
+const previewCard = new PreviewCard(cloneTemplate(previewTemplate), events);
+const basketModal = new BusketModal(cloneTemplate(basketModalTemplate), events);
+const orderForm = new OrderForm(cloneTemplate(orderTemplate) as HTMLFormElement, events);
+const contactsForm = new ContactsForm(cloneTemplate(contactsTemplate) as HTMLFormElement, events);
+const successModal = new Success(cloneTemplate(successTemplate), events);
+let currentOrderForm: OrderForm | null = orderForm;
 
 // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 function updateBasketCounter() {
   header.counter = busketModel.lengthBusket();
+}
+
+function handleBasketChange() {
+  updateBasketCounter();
+  updateBasketView();
+}
+
+function updateBasketView() {
+  const productsInBasket = busketModel.getBusket();
+  const items = productsInBasket.map((product, index) => {
+    const cardElement = cloneTemplate(basketTemplate);
+    const card = new BuskertCard(cardElement, {
+      onClick: () => events.emit('basket:remove', { id: product.id })
+    });
+
+    card.render({
+      title: product.title,
+      price: product.price,
+      index: index + 1,
+    });
+
+    return cardElement;
+  });
+
+  basketModal.items = items;
+  basketModal.total = busketModel.fullPriceBusket();
 }
 
 function renderCatalog() {
@@ -78,7 +110,7 @@ async function loadProducts() {
     const response = await request.getProducts();
     const productsWithCorrectPaths = response.items.map(product => ({
       ...product,
-      image: `productsimg${product.image}`
+      image: `${CDN_URL}${product.image}`
     }));
 
     productsModel.pushProducts(productsWithCorrectPaths);
@@ -93,10 +125,11 @@ events.on('card:select', (data: { id: string }) => {
   const product = productsModel.getProductId(data.id);
   if (!product) return;
 
-  const previewElement = cloneTemplate(previewTemplate);
-  const previewCard = new PreviewCard(previewElement, events);
-  previewCard.setProduct(product);
+  productsModel.saveCard(product);
+  openPreview(product);
+});
 
+function openPreview(product: IProduct) {
   previewCard.render({
     title: product.title,
     price: product.price,
@@ -107,78 +140,68 @@ events.on('card:select', (data: { id: string }) => {
 
   const inBasket = busketModel.checkProduct(product.id);
   const available = product.price !== null;
-  previewCard.setButtonState(inBasket, available);
 
-  modal.open(previewElement);
-});
-
-events.on('preview:add-to-basket', (data: { product: any }) => {
-  if (!busketModel.checkProduct(data.product.id)) {
-    busketModel.productToBusket(data.product);
-    updateBasketCounter();
-    modal.close();
+  if (!available) {
+    previewCard.buttonText = 'Недоступно';
+    previewCard.buttonDisabled = true;
+  } else if (inBasket) {
+    previewCard.buttonText = 'Удалить из корзины';
+    previewCard.buttonDisabled = false;
+  } else {
+    previewCard.buttonText = 'В корзину';
+    previewCard.buttonDisabled = false;
   }
-});
 
-events.on('preview:remove-from-basket', (data: { product: any }) => {
-  const product = data.product;
-  if (product && busketModel.checkProduct(product.id)) {
+  modal.open(previewCard.element);
+}
+
+events.on('preview:button-click', () => {
+  const product = productsModel.getCard();
+  if (!product) return;
+
+  const inBasket = busketModel.checkProduct(product.id);
+  const available = product.price !== null;
+
+  if (!available) return;
+
+  if (inBasket) {
     busketModel.deleteProduct(product);
-    updateBasketCounter();
-    modal.close();
+  } else {
+    busketModel.productToBusket(product);
   }
+
+  handleBasketChange();
+  modal.close();
 });
 
 // ========== СОБЫТИЯ КОРЗИНЫ ==========
-events.on('basket:open', () => {
-  const basketElement = cloneTemplate(basketModalTemplate);
-  const basketModal = new BusketModal(basketElement, events);
-
-  const productsInBasket = busketModel.getBusket();
-  const items = productsInBasket.map((product, index) => {
-    const cardElement = cloneTemplate(basketTemplate);
-    const card = new BuskertCard(cardElement, {
-      onClick: () => events.emit('basket:remove', { id: product.id })
-    });
-
-    card.render({
-      title: product.title,
-      price: product.price,
-      index: index + 1,
-    });
-
-    return cardElement;
-  });
-
-  basketModal.items = items;
-  basketModal.total = busketModel.fullPriceBusket();
-  modal.open(basketElement);
-});
-
 events.on('basket:remove', (data: { id: string }) => {
   const product = productsModel.getProductId(data.id);
   if (product) {
     busketModel.deleteProduct(product);
-    updateBasketCounter();
-    events.emit('basket:open');
+    handleBasketChange();
   }
+});
+
+events.on('basket:open', () => {
+  modal.open(basketModal.element);
 });
 
 events.on('basket:order', () => {
   if (busketModel.lengthBusket() === 0) return;
 
-  const orderElement = cloneTemplate(orderTemplate);
-  currentOrderForm = new OrderForm(orderElement as HTMLFormElement, events);
-
   const buyerData = buyerModel.buyerInformation();
-  if (buyerData.address) {
-    (currentOrderForm as any).setAddress?.(buyerData.address);
-  }
-  if (buyerData.payment) {
-    (currentOrderForm as any).setActivePaymentMethod?.(buyerData.payment);
+
+  if (buyerData.address && currentOrderForm) {
+    currentOrderForm.address = buyerData.address;
   }
 
-  modal.open(orderElement);
+  if (buyerData.payment && currentOrderForm) {
+    const paymentMethod = buyerData.payment === 'online' ? 'card' : buyerData.payment;
+    currentOrderForm.activePaymentMethod = paymentMethod as 'card' | 'cash';
+  }
+
+  modal.open(orderForm.element);
 });
 
 // ========== СОБЫТИЯ ФОРМЫ ЗАКАЗА ==========
@@ -190,17 +213,16 @@ events.on('order:change', (data: { field: string; value: string }) => {
   if (data.field === 'payment') {
     const paymentValue = data.value === 'card' ? 'online' : data.value;
     buyerModel.pushPayment(paymentValue as TPayment);
+    orderForm.activePaymentMethod = data.value as 'card' | 'cash';
   }
 
   const errors = buyerModel.validation();
   const isValid = !errors.address && !errors.pay;
 
-  if (currentOrderForm) {
-    currentOrderForm.render({
-      valid: isValid,
-      errors: [errors.address, errors.pay].filter((e): e is string => !!e)
-    });
-  }
+  orderForm.render({
+    valid: isValid,
+    errors: [errors.address, errors.pay].filter((e): e is string => !!e)
+  });
 });
 
 events.on('order:submit', () => {
@@ -208,9 +230,7 @@ events.on('order:submit', () => {
   const isValid = !errors.address && !errors.pay;
 
   if (isValid) {
-    const contactsElement = cloneTemplate(contactsTemplate);
-    currentContactsForm = new ContactsForm(contactsElement as HTMLFormElement, events);
-    modal.open(contactsElement);
+    modal.open(contactsForm.element);
   }
 });
 
@@ -222,15 +242,13 @@ events.on('contacts:change', (data: { field: string; value: string }) => {
     buyerModel.pushPhone(data.value);
   }
 
-  const errors = buyerModel.validation() as any;
+  const errors = buyerModel.validation();
   const isValid = !errors.email && !errors.phone;
 
-  if (currentContactsForm) {
-    currentContactsForm.render({
-      valid: isValid,
-      errors: [errors.email, errors.phone].filter(Boolean)
-    });
-  }
+  contactsForm.render({
+    valid: isValid,
+    errors: [errors.email, errors.phone].filter(Boolean)
+  });
 });
 
 events.on('contacts:submit', async () => {
@@ -253,12 +271,15 @@ events.on('contacts:submit', async () => {
 
       busketModel.cleanBusket();
       buyerModel.clearBuyerInformation();
-      updateBasketCounter();
+      handleBasketChange();
 
-      const successElement = cloneTemplate(successTemplate);
-      const success = new Success(successElement, events);
-      success.total = orderData.total;
-      modal.open(successElement);
+      orderForm.clear();
+      contactsForm.clear();
+
+      const response = await request.postOrder(orderData);
+      successModal.total = response.total;
+
+      modal.open(successModal.element);
     } catch (error) {
       console.error('Ошибка оформления заказа:', error);
     }
