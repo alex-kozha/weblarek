@@ -26,8 +26,8 @@ const events = new EventEmitter();
 const api = new Api(API_URL);
 const request = new Request(api);
 
-const productsModel = new Products();
-const busketModel = new Busket();
+const productsModel = new Products(events);;
+const busketModel = new Busket(events);
 const buyerModel = new Buyer();
 
 const headerContainer = document.querySelector('.header') as HTMLElement;
@@ -124,9 +124,7 @@ async function loadProducts() {
 events.on('card:select', (data: { id: string }) => {
   const product = productsModel.getProductId(data.id);
   if (!product) return;
-
   productsModel.saveCard(product);
-  openPreview(product);
 });
 
 function openPreview(product: IProduct) {
@@ -155,6 +153,10 @@ function openPreview(product: IProduct) {
   modal.open(previewCard.element);
 }
 
+events.on('preview:changed', (data: { product: IProduct }) => {
+  openPreview(data.product);
+});
+
 events.on('preview:button-click', () => {
   const product = productsModel.getCard();
   if (!product) return;
@@ -170,7 +172,6 @@ events.on('preview:button-click', () => {
     busketModel.productToBusket(product);
   }
 
-  handleBasketChange();
   modal.close();
 });
 
@@ -179,8 +180,11 @@ events.on('basket:remove', (data: { id: string }) => {
   const product = productsModel.getProductId(data.id);
   if (product) {
     busketModel.deleteProduct(product);
-    handleBasketChange();
   }
+});
+
+events.on('basket:changed', () => {
+  handleBasketChange();
 });
 
 events.on('basket:open', () => {
@@ -267,11 +271,10 @@ events.on('contacts:submit', async () => {
         items: busketModel.getBusket().map(item => item.id)
       };
 
-      await request.postOrder(orderData);
+
 
       busketModel.cleanBusket();
       buyerModel.clearBuyerInformation();
-      handleBasketChange();
 
       orderForm.clear();
       contactsForm.clear();

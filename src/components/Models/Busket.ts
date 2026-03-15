@@ -1,21 +1,27 @@
 import { IProduct } from '../../types/index.ts';
+import { IEvents } from '../base/Events';
 
 export class Busket{
   private busket: IProduct[]
-  constructor(){
-    this.busket =[]
+  private events: IEvents;
+
+  constructor(events: IEvents) {
+    this.events = events;
+    this.busket = [];
   }
 
   getBusket(): IProduct[]{
     return this.busket
   }
 
-  productToBusket(pr: IProduct){
-    this.busket.push(pr)
+  productToBusket(pr: IProduct) {
+    this.busket.push(pr);
+    this.events.emit('basket:changed');
   }
 
-  cleanBusket(){
-    this.busket = []
+  cleanBusket() {
+    this.busket = [];
+    this.events.emit('basket:changed');
   }
 
   checkProduct(id: string): boolean{
@@ -35,8 +41,12 @@ export class Busket{
     return result
   }
 
-  deleteProduct(pr: IProduct){
-      this.busket = this.busket.filter(item => item.id !== pr.id);
+  deleteProduct(pr: IProduct) {
+    const ind = this.busket.indexOf(pr);
+    if (ind !== -1) {
+      this.busket.splice(ind, 1);
+      this.events.emit('basket:changed');
+    }
   }
 
 }

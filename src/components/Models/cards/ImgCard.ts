@@ -10,8 +10,6 @@ export interface IImgCardData extends ICardData {
 export abstract class ImgCard extends Card {
   protected imageElement: HTMLImageElement;
   protected categoryElement: HTMLElement;
-  category: string = '';
-  image: string = '';
 
   constructor(container: HTMLElement) {
     super(container);
@@ -20,14 +18,16 @@ export abstract class ImgCard extends Card {
   }
 
   render(data: IImgCardData): HTMLElement {
-  super.render(data);
+    super.render(data);
 
-  this.categoryElement.textContent = this.category;
 
-  const modifier = categoryMap[this.category as keyof typeof categoryMap] || 'other';
-  this.categoryElement.className = `card__category ${modifier}`;
+    this.categoryElement.textContent = data.category;
+    const modifier = categoryMap[data.category as keyof typeof categoryMap] || 'other';
+     this.categoryElement.className = `card__category ${modifier}`;
 
-  this.imageElement.src = this.image;
-  return this.container;
-}
+
+    this.imageElement.src = data.image;
+
+    return this.container;
+  }
 }

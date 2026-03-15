@@ -1,9 +1,13 @@
 import { IProduct } from '../../types/index.ts';
+import { IEvents } from '../base/Events';
 
 export class Products{
   private products: IProduct[]
   private viewcard: IProduct | null
-  constructor( ){
+  private events: IEvents;
+
+  constructor(events: IEvents){
+    this.events = events;
     this.viewcard = null
     this.products = []
   }
@@ -25,8 +29,9 @@ export class Products{
     return result
   }
 
-  saveCard(card: IProduct){
-    this.viewcard = card
+  saveCard(card: IProduct) {
+    this.viewcard = card;
+    this.events.emit('preview:changed', { product: card });
   }
 
 }
